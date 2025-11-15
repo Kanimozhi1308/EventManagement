@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Participant Dashboard | My Events</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/participant.css" />
+  </head>
+
+  <body>
+    <input type="hidden" id="participantId" th:value="${parrticipantId}" />
+    <nav class="navbar navbar-expand-lg px-4">
+      <a class="navbar-brand fw-bold" href="#">Event Management</a>
+      <div class="ms-auto navbar-text">
+        👤 <span th:text="${userName}"></span> | 🆔
+        <span th:text="${userId}"></span>
+      </div>
+      <a href="/logout" class="btn btn-outline-light ms-2">Logout</a>
+      <a href="/" class="btn btn-outline-light ms-2">Home</a>
+    </nav>
+
+    <div class="container my-4">
+      <div
+        th:if="${successMessage}"
+        class="plain-success-message"
+        th:text="${successMessage}"
+      ></div>
+      <div
+        th:if="${errorMessage}"
+        class="plain-error-message"
+        th:text="${errorMessage}"
+      ></div>
+
+      <div class="card p-3 search-card">
+        <!-- Quote -->
+        <p class="text-muted text-center fst-italic">
+          "Your presence is the spark that makes an event come alive."
+        </p>
+        <form method="get" th:action="@{/participant/search}">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+              <label class="form-label visually-hidden">Speakers</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by Speakers"
+                name="speakers"
+                th:value="${speakers}"
+              />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label visually-hidden">Venue</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by Venue"
+                name="venue"
+                th:value="${venue}"
+              />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label visually-hidden">Category</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by Category"
+                name="category"
+                th:value="${category}"
+              />
+            </div>
+            <div class="col-md-3 d-grid gap-2 d-md-flex justify-content-end">
+              <button type="submit" class="btn btn-primary">Search</button>
+              <a th:href="@{/participant/dashboard}" class="btn btn-secondary"
+                >Reset</a
+              >
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="dashboard">
+        <div class="dashboard-left">
+          <h3 class="mb-3 text-black text-center">Available Events</h3>
+          <div th:if="${#lists.isEmpty(events)}" class="text-muted text-center">
+            No events found.
+          </div>
+          <div th:each="event : ${events}">
+            <div class="card event-card p-3">
+              <h5 th:text="${event.title}"></h5>
+              <p class="text-decoration mb-1">
+                📍 <span th:text="${event.venue}"></span>
+              </p>
+              <p class="text-decoration mb-1">
+                📅 <span th:text="${event.date}"></span>
+              </p>
+              <p class="text-decoration">
+                🏷️ <span th:text="${event.category}"></span>
+              </p>
+              <p class="text-decoration">
+                🎤 <span th:text="${event.Speakers}"></span>
+              </p>
+              <p class="text-decoration">
+                <span th:text="${event.description}"></span>
+              </p>
+              <button
+                class="btn register-btn w-80"
+                data-bs-toggle="modal"
+                data-bs-target="#registerModal"
+                th:attr="data-eventid=${event.id}, data-title=${event.title}"
+              >
+                Register
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-right">
+          <h4 class="text mb-3">My Registered Events</h4>
+          <div
+            th:if="${#lists.isEmpty(registeredEventDetails)}"
+            class="text-muted text-center"
+          >
+            <p>You haven't registered for any events yet.</p>
+          </div>
+          <div
+            th:each="detail : ${registeredEventDetails}"
+            class="mb-3 p-3 border rounded"
+          >
+            <h5 th:text="${detail.event.title}"></h5>
+            <p class="mb-1">
+              Date: <span th:text="${detail.event.date}"></span>
+            </p>
+            <p class="mb-1">
+              Venue: <span th:text="${detail.event.venue}"></span>
+            </p>
+            <p class="mb-1">
+              Category: <span th:text="${detail.event.category}"></span>
+            </p>
+            <p class="small text-muted mb-0 mt-2">
+              Registered on:
+              <span
+                th:text="${#temporals.format(detail.registration.registeredDate, 'dd-MM-yyyy HH:mm')}"
+              ></span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="post" th:action="@{/participant/register}">
+            <div class="modal-header">
+              <h5 class="modal-title">Register for Event</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="eventId" id="modalEventId" />
+              <div class="mb-3">
+                <label class="form-label">Event Title</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="modalEventTitle"
+                  readonly
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Your Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="participantName"
+                  th:value="${userName}"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  name="participantEmail"
+                  th:value="${userEmail}"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="participantPhone"
+                  th:value="${userPhone}"
+                  required
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">Register</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p class="mb-1">
+        &copy; 2025 SK~Event Management System. All rights reserved.
+      </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      const registerModal = document.getElementById("registerModal");
+      registerModal.addEventListener("show.bs.modal", (event) => {
+        const button = event.relatedTarget;
+        const eventId = button.getAttribute("data-eventid");
+        const title = button.getAttribute("data-title");
+        document.getElementById("modalEventId").value = eventId;
+        document.getElementById("modalEventTitle").value = title;
+      });
+    </script>
+  </body>
+</html>
